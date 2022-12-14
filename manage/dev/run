@@ -1,0 +1,21 @@
+#!/bin/bash
+
+source_dirs="lib bin"
+args=${*:-"bin/main.exe"}
+cmd="dune exec ${args}"
+
+function sigint_handler() {
+    kill "$(jobs -pr)"
+    reset # restore console output
+    exit 1
+}
+
+trap sigint_handler SIGINT
+
+while true; do
+    dune build
+    $cmd &
+    fswatch -r -1 --monitor poll_monitor $source_dirs
+    printf "\nRestarting main.exe due to filesystem change\n"
+    kill "$(jobs -pr)"
+done
