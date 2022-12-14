@@ -1,0 +1,4 @@
+(executable
+ (public_name dream_demo)
+ (name main)
+ (libraries dream_demo dream))
