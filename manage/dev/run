@@ -2,7 +2,8 @@
 
 source_dirs="lib bin"
 args=${*:-"bin/main.exe"}
-cmd="dune exec ${args}"
+#	cmd="dune exec ${args}"
+cmd="dune exec --display=quiet ${args}"
 
 function sigint_handler() {
     kill "$(jobs -pr)"
@@ -13,6 +14,7 @@ function sigint_handler() {
 trap sigint_handler SIGINT
 
 while true; do
+    clear
     dune build
     $cmd &
     fswatch -r -1 --monitor poll_monitor $source_dirs
