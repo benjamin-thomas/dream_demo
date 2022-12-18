@@ -45,6 +45,7 @@ let get_root _ =
   <li><a href="/show-upload">Upload files (will print their file size)</a></li>
   <li><a href="/bad">Return a bad request (HTTP 400 Bad Request)</a></li>
   <li><a href="/fail">Raise an exception (HTTP 500 Internal Server Error)</a></li>
+  <li><a href="/dev">Graphiql example</a></li>
 </ul>
 
 <hr>
@@ -119,6 +120,48 @@ let post_comment request =
       Dream.redirect request "/comments"
   | _ -> Dream.empty `Bad_Request
 
+open Graphql_lwt
+
+type role = User | Admin
+type user = { id : int; name : string; role : role }
+
+let users =
+  [
+    { id = 1; name = "Alice"; role = Admin };
+    { id = 2; name = "Bob"; role = User };
+  ]
+
+let role =
+  Schema.(
+    enum "role" ~doc:"The role of a user"
+      ~values:[ enum_value "USER" ~value:User; enum_value "ADMIN" ~value:Admin ])
+
+let user =
+  Schema.(
+    obj "user" ~doc:"A user in the system"
+      ~fields:
+        [
+          field "id" ~doc:"Unique user identifier" ~typ:(non_null int)
+            ~args:Arg.[]
+            ~resolve:(fun _info p -> p.id);
+          field "name" ~typ:(non_null string)
+            ~args:Arg.[]
+            ~resolve:(fun _info p -> p.name);
+          field "role" ~typ:(non_null role)
+            ~args:Arg.[]
+            ~resolve:(fun _info p -> p.role);
+        ])
+
+let schema =
+  Schema.(
+    schema
+      [
+        field "users"
+          ~typ:(non_null (list (non_null user)))
+          ~args:Arg.[]
+          ~resolve:(fun _info () -> users);
+      ])
+
 let () =
   run ~error_handler:debug_error_handler
   @@ logger
@@ -147,6 +190,8 @@ let () =
          (* Error handler examples *)
          get "/bad" (fun _ -> empty `Bad_Request);
          get "/fail" (fun _ -> raise (Failure "The Web app failed!"));
+         Dream.any "/graphql" (Dream.graphql Lwt.return schema);
+         Dream.get "/dev" (Dream.graphiql "/graphql");
          (* Live reload *)
          Dream_livereload.route ();
        ]
