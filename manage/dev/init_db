@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+rm ./db.sqlite
+sqlite3 ./db.sqlite <./manage/sql/init.sql

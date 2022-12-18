@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source_dirs="lib bin"
+source_dirs="lib bin manage/sql"
 args=${*:-"bin/main.exe"}
 #	cmd="dune exec ${args}"
 cmd="dune exec --display=quiet ${args}"
@@ -14,6 +14,7 @@ function sigint_handler() {
 trap sigint_handler SIGINT
 
 while true; do
+    ./manage/dev/init_db # Move one-up if I want to keep db state accross reloads
     clear
     dune build
     $cmd &

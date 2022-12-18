@@ -1,12 +1,12 @@
 (executable
  (public_name dream_demo)
  (name main)
- (libraries dream_demo dream dream-livereload)
+ (libraries dream_demo dream dream-livereload caqti-driver-sqlite3)
  (preprocess
   (pps lwt_ppx ppx_yojson_conv)))
 
 (rule
- (targets template.ml)
- (deps template.eml.ml)
+ (targets template.ml comments.ml)
+ (deps template.eml.ml comments.eml.ml)
  (action
   (run dream_eml %{deps} --workspace %{workspace_root})))
