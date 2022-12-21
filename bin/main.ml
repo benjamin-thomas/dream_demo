@@ -70,6 +70,13 @@ let post_form action req =
 
 type message_object = { message : string } [@@deriving yojson]
 
+type server_object = {
+  currTime : float;
+  client_message_was : string; [@key "clientMessage"]
+  server_message : string;
+}
+[@@deriving yojson]
+
 (* echo '{"message": "hello"}' | http POST :8080/json Origin:http://localhost:8080 Host:localhost:8080 *)
 let post_json request =
   let%lwt body = body request in
@@ -78,7 +85,29 @@ let post_json request =
     body |> Yojson.Safe.from_string |> message_object_of_yojson
   in
 
-  `String message_object.message |> Yojson.Safe.to_string |> json
+  let ct = Unix.gettimeofday () in
+
+  (*
+
+irb(main):001:0> Time.at(1671613370.7555)
+=> 2022-12-21 10:02:50 3168797/4194304 +0100
+
+(new Date(1671613370.7555 * 1000)).toString()
+'Wed Dec 21 2022 10:02:50 GMT+0100 (heure normale d’Europe centrale)'
+
+  *)
+
+  (* let now = Core.Time_ns.now () in *)
+  let (srv_obj : server_object) =
+    {
+      currTime = ct;
+      client_message_was = message_object.message;
+      server_message = "This works";
+    }
+  in
+
+  (* `String message_object.message |> Yojson.Safe.to_string |> json *)
+  yojson_of_server_object srv_obj |> Yojson.Safe.to_string |> json
 
 let show_upload req = html (Template.show_upload req)
 
@@ -161,6 +190,15 @@ let schema =
           ~args:Arg.[]
           ~resolve:(fun _info () -> users);
       ])
+
+(*
+type message_object = { message : string } [@@deriving yojson]
+
+let my_message = { message = "Hello message object!" }
+
+let b =
+  let my_message_conv = messto
+  my_message |> message_object_of_yojson |> Yojson.Safe.to_string |> Dream.json *)
 
 let () =
   run ~error_handler:debug_error_handler
