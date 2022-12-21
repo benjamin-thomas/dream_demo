@@ -76,6 +76,10 @@ type server_object = {
   server_message : string;
 }
 [@@deriving yojson]
+(*
+[@@deriving_inline yojson]
+[@@@end]
+*)
 
 (* echo '{"message": "hello"}' | http POST :8080/json Origin:http://localhost:8080 Host:localhost:8080 *)
 let post_json request =
